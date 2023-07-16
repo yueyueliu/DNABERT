@@ -450,6 +450,7 @@ class PreTrainedTokenizer(object):
                         proxies=proxies,
                         resume_download=resume_download,
                     )
+                    print()
         except EnvironmentError:
             if pretrained_model_name_or_path in s3_models:
                 msg = "Couldn't reach server at '{}' to download vocabulary files."

@@ -1088,7 +1088,7 @@ class PreTrainedTokenizer(object):
             if return_input_lengths:
                 outputs["input_len"] = len(outputs["input_ids"])
 
-            for key, value in outputs.items():
+            for key, value in outputs.items():##Not used
                 if key not in batch_outputs:
                     batch_outputs[key] = []
                 batch_outputs[key].append(value)
@@ -1096,7 +1096,7 @@ class PreTrainedTokenizer(object):
         # Compute longest sequence size
         max_seq_len = max(map(len, batch_outputs["input_ids"]))
 
-        if return_attention_masks:
+        if return_attention_masks:## not used
             # Allow the model to not give any special attention to padded input
             batch_outputs["attention_mask"] = [[0] * len(v) for v in batch_outputs["input_ids"]]
 

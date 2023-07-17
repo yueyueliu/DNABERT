@@ -86,7 +86,7 @@ MODEL_CLASSES = {
     "camembert": (CamembertConfig, CamembertForMaskedLM, CamembertTokenizer),
 }
 
-MASK_LIST = {
+MASK_LIST = {## 以当前碱基往外扩展成为Kmer
     "3": [-1, 1],
     "4": [-1, 1, 2],
     "5": [-2, -1, 1, 2],
@@ -142,8 +142,7 @@ class LineByLineTextDataset(Dataset):
     def __init__(self, tokenizer: PreTrainedTokenizer, args, file_path: str, block_size=512):
         assert os.path.isfile(file_path)
         # Here, we do not cache the features, operating under the assumption
-        # that we will soon use fast multithreaded tokenizers from the
-        # `tokenizers` repo everywhere =)
+        # that we will soon use fast multithreaded tokenizers from the `tokenizers` repo everywhere =)
         directory, filename = os.path.split(file_path)
         cached_features_file = os.path.join(
             directory, args.model_type + "_cached_lm_" + str(block_size) + "_" + filename
@@ -153,19 +152,20 @@ class LineByLineTextDataset(Dataset):
             logger.info("Loading features from cached file %s", cached_features_file)
             with open(cached_features_file, "rb") as handle:
                 self.examples = pickle.load(handle)
-        else:
+                print()
+        else:### 构建
             logger.info("Creating features from dataset file at %s", file_path)
 
             with open(file_path, encoding="utf-8") as f:
                 lines = [line for line in f.read().splitlines() if (len(line) > 0 and not line.isspace())]
             
-            if args.n_process == 1:
+            if args.n_process == 1:## Not used
                 self.examples = tokenizer.batch_encode_plus(lines, add_special_tokens=True, max_length=block_size)["input_ids"]
             else:
-                n_proc = args.n_process
-                p = Pool(n_proc)
+                n_proc = args.n_process#24
+                p = Pool(n_proc)#<multiprocessing.pool.Pool state=RUN pool_size=24>
                 indexes = [0]
-                len_slice = int(len(lines)/n_proc)
+                len_slice = int(len(lines)/n_proc)#125
                 for i in range(1, n_proc+1):
                     if i != n_proc:
                         indexes.append(len_slice*(i))
@@ -196,14 +196,14 @@ class LineByLineTextDataset(Dataset):
 
 def load_and_cache_examples(args, tokenizer, evaluate=False):
     file_path = args.eval_data_file if evaluate else args.train_data_file
-    if args.line_by_line:
+    if args.line_by_line:#####
         return LineByLineTextDataset(tokenizer, args, file_path=file_path, block_size=args.block_size)
     else:
         return TextDataset(tokenizer, args, file_path=file_path, block_size=args.block_size)
 
 
 def set_seed(args):
-    random.seed(args.seed)
+    random.seed(args.seed)# 42
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
     if args.n_gpu > 0:
@@ -251,16 +251,16 @@ def _rotate_checkpoints(args, checkpoint_prefix="checkpoint", use_mtime=False) -
 def mask_tokens(inputs: torch.Tensor, tokenizer: PreTrainedTokenizer, args) -> Tuple[torch.Tensor, torch.Tensor]:
     """ Prepare masked tokens inputs/labels for masked language modeling: 80% MASK, 10% random, 10% original. """
     
-    mask_list = MASK_LIST[tokenizer.kmer]
+    mask_list = MASK_LIST[tokenizer.kmer]#[-2, -1, 1, 2, 3]
 
-    if tokenizer.mask_token is None:
+    if tokenizer.mask_token is None:##### Not used
         raise ValueError(
             "This tokenizer does not have a mask token which is necessary for masked language modeling. Remove the --mlm flag if you want to use this tokenizer."
         )
 
     labels = inputs.clone()
     # We sample a few tokens in each sequence for masked-LM training (with probability args.mlm_probability defaults to 0.15 in Bert/RoBERTa)
-    probability_matrix = torch.full(labels.shape, args.mlm_probability)
+    probability_matrix = torch.full(labels.shape, args.mlm_probability)#mlm_probability=0.025
     special_tokens_mask = [
         tokenizer.get_special_tokens_mask(val, already_has_special_tokens=True) for val in labels.tolist()
     ]
@@ -306,7 +306,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     if args.local_rank in [-1, 0]:
         tb_writer = SummaryWriter()
 
-    args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)
+    args.train_batch_size = args.per_gpu_train_batch_size * max(1, args.n_gpu)#1
 
     def collate(examples: List[torch.Tensor]):
         if tokenizer._pad_token is None:
@@ -316,7 +316,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     train_sampler = RandomSampler(train_dataset) if args.local_rank == -1 else DistributedSampler(train_dataset)
     train_dataloader = DataLoader(
         train_dataset, sampler=train_sampler, batch_size=args.train_batch_size, collate_fn=collate
-    )
+    )#len * batchsize = samplelen
 
     if args.max_steps > 0:
         t_total = args.max_steps
@@ -341,7 +341,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     )
 
     # Check if saved optimizer or scheduler states exist
-    if (
+    if (### Not used
         args.model_name_or_path
         and os.path.isfile(os.path.join(args.model_name_or_path, "optimizer.pt"))
         and os.path.isfile(os.path.join(args.model_name_or_path, "scheduler.pt"))
@@ -350,7 +350,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
         optimizer.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "optimizer.pt")))
         scheduler.load_state_dict(torch.load(os.path.join(args.model_name_or_path, "scheduler.pt")))
 
-    if args.fp16:
+    if args.fp16:### not used
         try:
             from apex import amp
         except ImportError:
@@ -358,11 +358,11 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
         model, optimizer = amp.initialize(model, optimizer, opt_level=args.fp16_opt_level)
 
     # multi-gpu training (should be after apex fp16 initialization)
-    if args.n_gpu > 1:
+    if args.n_gpu > 1:### not used
         model = torch.nn.DataParallel(model)
 
     # Distributed training (should be after apex fp16 initialization)
-    if args.local_rank != -1:
+    if args.local_rank != -1:### not used
         model = torch.nn.parallel.DistributedDataParallel(
             model, device_ids=[args.local_rank], output_device=args.local_rank, find_unused_parameters=True
         )
@@ -384,7 +384,8 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     global_step = 0
     epochs_trained = 0
     steps_trained_in_current_epoch = 0
-    # Check if continuing training from a checkpoint
+
+    # Check if continuing training from a checkpoint#### not used
     if args.model_name_or_path and os.path.exists(args.model_name_or_path):
         try:
             # set global_step to gobal_step of last saved checkpoint from model path
@@ -406,14 +407,15 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     model_to_resize.resize_token_embeddings(len(tokenizer))
 
     model.zero_grad()
-    train_iterator = trange(
+    train_iterator = trange(#Epoch:   0%|          | 0/1 [00:00<?, ?it/s]
         epochs_trained, int(args.num_train_epochs), desc="Epoch", disable=args.local_rank not in [-1, 0]
     )
+
     set_seed(args)  # Added here for reproducibility
     ids_set = {'0':0,'1':0,'2':0,'3':0,'4':0,'5':0,'6':0,'7':0,'8':0}
     for _ in train_iterator:
-        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])
-        for step, batch in enumerate(epoch_iterator):
+        epoch_iterator = tqdm(train_dataloader, desc="Iteration", disable=args.local_rank not in [-1, 0])#Iteration:   0%|          | 0/3000 [00:37<?, ?it/s]
+        for step, batch in enumerate(epoch_iterator):#batch={Tensor:(1,432)}
 
             # Skip past any already trained steps if resuming training
             if steps_trained_in_current_epoch > 0:
@@ -563,7 +565,6 @@ def evaluate(args, model: PreTrainedModel, tokenizer: PreTrainedTokenizer, prefi
 
 def main():
     parser = argparse.ArgumentParser()
-
     # Required parameters
     parser.add_argument(
         "--train_data_file", default=None, type=str, required=True, help="The input training data file (a text file)."
@@ -606,7 +607,6 @@ def main():
     parser.add_argument(
         "--mlm_probability", type=float, default=0.15, help="Ratio of tokens to mask for masked language modeling loss"
     )
-
     parser.add_argument(
         "--config_name",
         default=None,
@@ -716,14 +716,14 @@ def main():
             "Cannot do evaluation without an evaluation data file. Either supply a file to --eval_data_file "
             "or remove the --do_eval argument."
         )
-    if args.should_continue:
+    if args.should_continue:#### Not used
         sorted_checkpoints = _sorted_checkpoints(args)
         if len(sorted_checkpoints) == 0:
             raise ValueError("Used --should_continue but no checkpoint was found in --output_dir.")
         else:
             args.model_name_or_path = sorted_checkpoints[-1]
 
-    if (
+    if (#### Not used
         os.path.exists(args.output_dir)
         and os.listdir(args.output_dir)
         and args.do_train
@@ -736,7 +736,7 @@ def main():
         )
 
     # Setup distant debugging if needed
-    if args.server_ip and args.server_port:
+    if args.server_ip and args.server_port:### Not used
         # Distant debugging - see https://code.visualstudio.com/docs/python/debugging#_attach-to-a-local-script
         import ptvsd
 
@@ -745,7 +745,7 @@ def main():
         ptvsd.wait_for_attach()
 
     # Setup CUDA, GPU & distributed training
-    if args.local_rank == -1 or args.no_cuda:
+    if args.local_rank == -1 or args.no_cuda:### Used
         device = torch.device("cuda:0" if torch.cuda.is_available() and not args.no_cuda else "cpu")
         args.n_gpu = torch.cuda.device_count()
     else:  # Initializes the distributed backend which will take care of sychronizing nodes/GPUs
@@ -774,12 +774,13 @@ def main():
     set_seed(args)
 
     # Load pretrained model and tokenizer
-    if args.local_rank not in [-1, 0]:
+    if args.local_rank not in [-1, 0]:### Not used
         torch.distributed.barrier()  # Barrier to make sure only the first process in distributed training download model & vocab
 
+    #"dna": (BertConfig, BertForMaskedLM, DNATokenizer),
     config_class, model_class, tokenizer_class = MODEL_CLASSES[args.model_type]
 
-    if args.config_name:
+    if args.config_name:##读取Kmer参数
         config = config_class.from_pretrained(args.config_name, cache_dir=args.cache_dir)
     elif args.model_name_or_path:
         config = config_class.from_pretrained(args.model_name_or_path, cache_dir=args.cache_dir)
@@ -787,7 +788,7 @@ def main():
         config = config_class()
 
 
-    if args.tokenizer_name:
+    if args.tokenizer_name:## 获取 DNAtokenizer len=4101
         tokenizer = tokenizer_class.from_pretrained(args.tokenizer_name, cache_dir=args.cache_dir)
     elif args.model_name_or_path:
         tokenizer = tokenizer_class.from_pretrained(args.model_name_or_path, cache_dir=args.cache_dir)
@@ -800,40 +801,43 @@ def main():
     # text = "C G A T A T A G"
     # print(tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text)))
 
-    if args.block_size <= 0:
-        args.block_size = tokenizer.max_len
+    if args.block_size <= 0:### Not used
+        args.block_size = tokenizer.max_len#512 512
         # Our input block size will be the max possible for the model
-    else:
+    else:# 512
         args.block_size = min(args.block_size, tokenizer.max_len)
 
-    if args.model_name_or_path:
+    if args.model_name_or_path:### Not used
         model = model_class.from_pretrained(
             args.model_name_or_path,
             from_tf=bool(".ckpt" in args.model_name_or_path),
             config=config,
             cache_dir=args.cache_dir,
         )
-    else:
+    else:################Training new model from scratch
         logger.info("Training new model from scratch")
-        model = model_class(config=config)
+        model = model_class(config=config)### model=BertForMaskedLM
 
     model.to(args.device)
 
-    if args.local_rank == 0:
+    if args.local_rank == 0:### Not used
         torch.distributed.barrier()  # End of barrier to make sure only the first process in distributed training download model & vocab
 
     logger.info("Training/evaluation parameters %s", args)
 
-    # Training
+######################## Training#######################################################################################
     if args.do_train:
-        if args.local_rank not in [-1, 0]:
+        if args.local_rank not in [-1, 0]:##-1  Not Used
             torch.distributed.barrier()  # Barrier to make sure only the first process in distributed training process the dataset, and the others will use the cache
 
-        train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False)
+        train_dataset = load_and_cache_examples(args, tokenizer, evaluate=False)#<__main__.LineByLineTextDataset object at 0x7ff3216420a0>
 
-        if args.local_rank == 0:
+        if args.local_rank == 0:### Not used
             torch.distributed.barrier()
 
+#train_dataset: <__main__.LineByLineTextDataset object at 0x7ff3216420a0>
+#model: DNA
+#tokenizer: <transformers.tokenization_dna.DNATokenizer object at 0x7ff321642790>
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 
@@ -860,7 +864,7 @@ def main():
         tokenizer = tokenizer_class.from_pretrained(args.output_dir)
         model.to(args.device)
 
-    # Evaluation
+########### Evaluation#################################################################################################
     results = {}
     if args.do_eval and args.local_rank in [-1, 0]:
         checkpoints = [args.output_dir]

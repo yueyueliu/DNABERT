@@ -1,16 +1,16 @@
 #!/usr/bin/env python
 from argparse import ArgumentParser
 
-from transformers.commands.convert import ConvertCommand
-from transformers.commands.download import DownloadCommand
-from transformers.commands.env import EnvironmentCommand
-from transformers.commands.run import RunCommand
-from transformers.commands.serving import ServeCommand
-from transformers.commands.user import UserCommands
+from transformer.commands.convert import ConvertCommand
+from transformer.commands.download import DownloadCommand
+from transformer.commands.env import EnvironmentCommand
+from transformer.commands.run import RunCommand
+from transformer.commands.serving import ServeCommand
+from transformer.commands.user import UserCommands
 
 if __name__ == '__main__':
-    parser = ArgumentParser('Transformers CLI tool', usage='transformers-cli <command> [<args>]')
-    commands_parser = parser.add_subparsers(help='transformers-cli command helpers')
+    parser = ArgumentParser('Transformers CLI tool', usage='transformer-cli <command> [<args>]')
+    commands_parser = parser.add_subparsers(help='transformer-cli command helpers')
 
     # Register commands
     ConvertCommand.register_subcommand(commands_parser)

@@ -5,7 +5,7 @@ import argparse
 import os
 import numpy as np
 
-from transformers import BertTokenizer, BertModel, DNATokenizer
+from transformer import BertTokenizer, BertModel, DNATokenizer
 from process_pretrain_data import get_kmer_sentence
 
 
@@ -114,7 +114,7 @@ def main():
     )
     parser.add_argument(
         "--model_path",
-        default="/home/zhihan/dna/dna-transformers/examples/ft/690/p53-small/TAp73beta/3/",
+        default="/home/zhihan/dna/dna-transformer/examples/ft/690/p53-small/TAp73beta/3/",
         type=str,
         help="The path of the finetuned model",
     )

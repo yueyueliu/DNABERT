@@ -39,7 +39,7 @@ from torch.utils.data import DataLoader, Dataset, RandomSampler, SequentialSampl
 from torch.utils.data.distributed import DistributedSampler
 from tqdm import tqdm, trange
 
-from transformers import (
+from transformer import (
     WEIGHTS_NAME,
     AdamW,
     BertConfig,
@@ -66,6 +66,7 @@ from transformers import (
     get_linear_schedule_with_warmup,
 )
 
+from gpn.model import ConvNetConfig, ConvNetForMaskedLM
 
 try:
     from torch.utils.tensorboard import SummaryWriter
@@ -77,6 +78,7 @@ logger = logging.getLogger(__name__)
 
 
 MODEL_CLASSES = {
+    "gpn": (ConvNetConfig, ConvNetForMaskedLM,DNATokenizer),
     "gpt2": (GPT2Config, GPT2LMHeadModel, GPT2Tokenizer),
     "openai-gpt": (OpenAIGPTConfig, OpenAIGPTLMHeadModel, OpenAIGPTTokenizer),
     "dna": (BertConfig, BertForMaskedLM, DNATokenizer),
@@ -434,7 +436,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
             model.train()
             # print(inputs.max(),inputs.min());print(labels.max(),labels.min())
             outputs = model(inputs, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
-            loss = outputs[0]  # model outputs are always tuple in transformers (see doc)
+            loss = outputs[0]  # model outputs are always tuple in transformer (see doc)
 
             if args.n_gpu > 1:
                 loss = loss.mean()  # mean() to average on multi-gpu parallel training
@@ -871,7 +873,7 @@ def main():
             checkpoints = list(
                 os.path.dirname(c) for c in sorted(glob.glob(args.output_dir + "/**/" + WEIGHTS_NAME, recursive=True))
             )
-            logging.getLogger("transformers.modeling_utils").setLevel(logging.WARN)  # Reduce logging
+            logging.getLogger("transformer.modeling_utils").setLevel(logging.WARN)  # Reduce logging
         logger.info("Evaluate the following checkpoints: %s", checkpoints)
         for checkpoint in checkpoints:
             global_step = checkpoint.split("-")[-1] if len(checkpoints) > 1 else ""

@@ -10,10 +10,10 @@ examples/data_old
 examples/data
 examples/result
 examples/models
-src/transformers/data/__pycache__
-src/transformers/data/metrics/__pycache__
-src/transformers/data/processors/__pycache__
-src/transformers/__pycache__
+src/transformer/data/__pycache__
+src/transformer/data/metrics/__pycache__
+src/transformer/data/processors/__pycache__
+src/transformer/__pycache__
 src/transformers.egg-info
 .idea
 examples/runs

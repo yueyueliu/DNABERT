@@ -406,7 +406,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
     tr_loss, logging_loss = 0.0, 0.0
 
     model_to_resize = model.module if hasattr(model, "module") else model  # Take care of distributed/parallel training
-    model_to_resize.resize_token_embeddings(len(tokenizer))
+    # model_to_resize.resize_token_embeddings(len(tokenizer))
 
     model.zero_grad()
     train_iterator = trange(#Epoch:   0%|          | 0/1 [00:00<?, ?it/s]
@@ -435,7 +435,7 @@ def train(args, train_dataset, model: PreTrainedModel, tokenizer: PreTrainedToke
             labels = labels.to(args.device)
             model.train()
             # print(inputs.max(),inputs.min());print(labels.max(),labels.min())
-            outputs = model(inputs, masked_lm_labels=labels) if args.mlm else model(inputs, labels=labels)
+            outputs = model(inputs, labels=labels) if args.mlm else model(inputs, labels=labels)
             loss = outputs[0]  # model outputs are always tuple in transformer (see doc)
 
             if args.n_gpu > 1:

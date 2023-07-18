@@ -35,23 +35,26 @@ VOCAB_FILES_NAMES = {"vocab_file": "vocab.txt"}
 PRETRAINED_VOCAB_FILES_MAP = {"vocab_file": {"dna3": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-3/vocab.txt",
                                              "dna4": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-4/vocab.txt",
                                              "dna5": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-5/vocab.txt",
-                                             "dna6": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-6/vocab.txt"}}
+                                             "dna6": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-6/vocab.txt",
+                                             "dna1": "/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-1/vocab.txt",}}
 
 
 
 PRETRAINED_POSITIONAL_EMBEDDINGS_SIZES = {
-                                          "dna3": 512,
+                                          "dna3": 512,"dna1": 512,
                                           "dna4": 512,
                                           "dna5": 512,
                                           "dna6": 512}
 
 PRETRAINED_INIT_CONFIGURATION = {
+    "dna1": {"do_lower_case": False},
     "dna3": {"do_lower_case": False},
     "dna4": {"do_lower_case": False},
     "dna5": {"do_lower_case": False},
     "dna6": {"do_lower_case": False}}
 
 VOCAB_KMER = {
+    "9": "1",
     "69": "3",
     "261": "4",
     "1029": "5",

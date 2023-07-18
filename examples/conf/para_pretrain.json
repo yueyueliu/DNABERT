@@ -1,11 +1,11 @@
 --output_dir output
 --model_type=dna
---tokenizer_name=dna6
---config_name=/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-6/config.json
+--tokenizer_name=dna1
+--config_name=/home/liuyue/PycharmProjects/DNABERT/src/transformers/dnabert-config/bert-config-1/config.json
 --do_train 
---train_data_file=/home/liuyue/PycharmProjects/DNABERT/examples/sample_data/pre/6_3k.txt
+--train_data_file=/home/liuyue/PycharmProjects/DNABERT/examples/sample_data/pre/demo_data_512.txt
 --do_eval 
---eval_data_file=/home/liuyue/PycharmProjects/DNABERT/examples/sample_data/pre/6_3k.txt
+--eval_data_file=/home/liuyue/PycharmProjects/DNABERT/examples/sample_data/pre/demo_data_512.txt
 --mlm 
 --gradient_accumulation_steps 25 
 --per_gpu_train_batch_size 1

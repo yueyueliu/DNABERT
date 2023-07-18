@@ -87,6 +87,7 @@ MODEL_CLASSES = {
 }
 
 MASK_LIST = {## 以当前碱基往外扩展成为Kmer
+    "1": [],
     "3": [-1, 1],
     "4": [-1, 1, 2],
     "5": [-2, -1, 1, 2],
@@ -165,7 +166,7 @@ class LineByLineTextDataset(Dataset):
                 n_proc = args.n_process#24
                 p = Pool(n_proc)#<multiprocessing.pool.Pool state=RUN pool_size=24>
                 indexes = [0]
-                len_slice = int(len(lines)/n_proc)#125
+                len_slice = int(len(lines)/n_proc)#124/24=5
                 for i in range(1, n_proc+1):
                     if i != n_proc:
                         indexes.append(len_slice*(i))
@@ -835,9 +836,7 @@ def main():
         if args.local_rank == 0:### Not used
             torch.distributed.barrier()
 
-#train_dataset: <__main__.LineByLineTextDataset object at 0x7ff3216420a0>
-#model: DNA
-#tokenizer: <transformers.tokenization_dna.DNATokenizer object at 0x7ff321642790>
+
         global_step, tr_loss = train(args, train_dataset, model, tokenizer)
         logger.info(" global_step = %s, average loss = %s", global_step, tr_loss)
 

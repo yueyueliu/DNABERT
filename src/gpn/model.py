@@ -122,12 +122,13 @@ class ConvNetForMaskedLM(ConvNetPreTrainedModel):
         logits = self.cls(hidden_state)
         loss = None
         if labels is not None:
-            loss_fct = CrossEntropyLoss(reduction="none")
+            # loss_fct = CrossEntropyLoss(reduction="none")
+            loss_fct = CrossEntropyLoss()
             labels = labels.view(-1)
             loss = loss_fct(logits.view(-1, self.config.vocab_size), labels)
-            loss_weight = loss_weight.view(-1)
-            loss_weight[labels==-100] = 0.0
-            loss = (loss * loss_weight / loss_weight.sum()).sum()
+            # loss_weight = loss_weight.view(-1)
+            # loss_weight[labels==-100] = 0.0
+            # loss = (loss * loss_weight / loss_weight.sum()).sum()
         return MaskedLMOutput(
             loss=loss,
             logits=logits,
